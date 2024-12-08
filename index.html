@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>الإصابة في جداول الضرب</title>
+    <title>الإصابة في جداول القسمة</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -147,21 +147,21 @@
 
 <body>
     <!-- عنوان اللعبة -->
-    <div id="game-title">الإصابة في جداول الضرب</div>
+    <div id="game-title">الإصابة في جداول القسمة</div>
     <div id="game-subtitle">ركز وأصب الهدف</div>
 
     <div class="game-container">
         <div class="header">
-            <div>الدرجة: <span id="score">٠</span></div>
+            <div>الدرجة: <span id="score">٠</span> / <span id="total">٠</span></div>
         </div>
 
-        <div id="question-box">؟ × ؟ = ؟</div>
+        <div id="question-box">؟ ÷ ؟ = ؟</div>
 
         <div id="falling-answers"></div>
 
         <div class="buttons">
             <button id="restart-btn" onclick="restartGame()">بدء من جديد</button>
-            <button id="pause-btn" onclick="pauseGame()">إيقاف</button>
+            <button id="pause-btn" onclick="pauseGame()">إيقاف مؤقت</button>
             <button id="end-btn" onclick="endGame()">إنهاء</button>
         </div>
 
@@ -170,11 +170,12 @@
 
     <!-- تذييل -->
     <div class="footer">
-        تصميم عبدالعزيز العبدالجبار مع الذكاء الاصطناعي
+        فكرة وإعداد/فنون الرياضيات ـ إشراف المعلمة/سعاد الغامدي ـ تنفيذ/الذكاء الاصطناعي
     </div>
 
     <script>
         const scoreEl = document.getElementById("score");
+        const totalEl = document.getElementById("total");
         const questionBox = document.getElementById("question-box");
         const fallingAnswers = document.getElementById("falling-answers");
         const resultEl = document.getElementById("result");
@@ -183,39 +184,49 @@
         const endBtn = document.getElementById("end-btn");
 
         let score = 0;
+        let totalQuestions = 0;
         let isPaused = false;
         let hasAnswered = false;
+        let isGameEnded = false;
+        let currentQuestion = null;
+        let fallIntervals = [];
 
         function randomInt(min, max) {
             return Math.floor(Math.random() * (max - min + 1)) + min;
         }
 
         function generateQuestion() {
-            const num1 = randomInt(1, 10);
-            const num2 = randomInt(1, 10);
-            const correctAnswer = num1 * num2;
+            const divisor = randomInt(1, 10);
+            const quotient = randomInt(1, 10);
+            const dividend = divisor * quotient;
 
-            questionBox.textContent = `${num1} × ${num2} = ؟`.replace(/\d/g, (digit) => "٠١٢٣٤٥٦٧٨٩"[digit]);
+            questionBox.textContent = `${dividend} ÷ ${divisor} = ؟`.replace(/\d/g, (digit) => "٠١٢٣٤٥٦٧٨٩"[digit]);
 
             const answers = new Set();
-            answers.add(correctAnswer);
+            answers.add(quotient);
 
             while (answers.size < 3) {
-                const wrongAnswer = num1 * randomInt(1, 10);
+                const wrongAnswer = randomInt(1, 10);
                 if (!answers.has(wrongAnswer)) answers.add(wrongAnswer);
             }
 
             return {
-                correctAnswer,
+                correctAnswer: quotient,
                 answers: Array.from(answers),
             };
         }
 
-        function dropAnswers({ correctAnswer, answers }) {
+        function dropAnswers(questionData) {
+            if (isGameEnded) return;
+
+            currentQuestion = questionData; // Store the current question
+
             fallingAnswers.innerHTML = "";
             hasAnswered = false;
+            totalQuestions++;
+            totalEl.textContent = `${totalQuestions}`.replace(/\d/g, (digit) => "٠١٢٣٤٥٦٧٨٩"[digit]);
 
-            const shuffledAnswers = answers.sort(() => Math.random() - 0.5);
+            const shuffledAnswers = questionData.answers.sort(() => Math.random() - 0.5);
 
             shuffledAnswers.forEach((answer, index) => {
                 const circle = document.createElement("div");
@@ -225,10 +236,10 @@
                 circle.style.top = `-50px`;
 
                 circle.onclick = () => {
-                    if (hasAnswered || isPaused) return;
+                    if (hasAnswered || isPaused || isGameEnded) return;
                     hasAnswered = true;
 
-                    if (answer === correctAnswer) {
+                    if (answer === questionData.correctAnswer) {
                         circle.classList.add("correct");
                         score++;
                         scoreEl.textContent = `${score}`.replace(/\d/g, (digit) => "٠١٢٣٤٥٦٧٨٩"[digit]);
@@ -236,7 +247,7 @@
                         circle.classList.add("wrong");
                         document.querySelectorAll(".circle").forEach((el) => {
                             if (
-                                parseInt(el.textContent.replace(/[٠-٩]/g, (digit) => "0123456789"["٠١٢٣٤٥٦٧٨٩".indexOf(digit)])) === correctAnswer
+                                parseInt(el.textContent.replace(/[٠-٩]/g, (digit) => "0123456789"["٠١٢٣٤٥٦٧٨٩".indexOf(digit)])) === questionData.correctAnswer
                             ) {
                                 el.classList.add("correct");
                             }
@@ -244,7 +255,7 @@
                     }
 
                     setTimeout(() => {
-                        if (!isPaused) startGame();
+                        if (!isPaused && !isGameEnded) startGame();
                     }, 1000);
                 };
 
@@ -254,52 +265,80 @@
         }
 
         function animateCircle(circle) {
-            let top = -50;
-            const fallSpeed = 1;
+            let top = parseInt(circle.style.top.replace("px", "")) || -50;
+            const fallSpeed = 2;
 
             const fallInterval = setInterval(() => {
-                if (isPaused) return;
+                if (isPaused || isGameEnded) {
+                    clearInterval(fallInterval);
+                    return;
+                }
 
                 top += fallSpeed;
                 circle.style.top = `${top}px`;
 
-                if (top > 300) {
+                if (top >= fallingAnswers.offsetHeight - circle.offsetHeight) {
                     clearInterval(fallInterval);
 
-                    if (!hasAnswered && [...fallingAnswers.children].every((el) => parseInt(el.style.top) > 300)) {
+                    if (!hasAnswered && [...fallingAnswers.children].every((el) => parseInt(el.style.top) >= fallingAnswers.offsetHeight - el.offsetHeight)) {
                         startGame();
                     }
                 }
             }, 20);
+
+            fallIntervals.push(fallInterval);
+        }
+
+        function resumeAnimations() {
+            const circles = document.querySelectorAll(".circle");
+            circles.forEach((circle) => animateCircle(circle));
         }
 
         function startGame() {
-            if (isPaused) return;
+            if (isPaused || isGameEnded) return;
 
-            const questionData = generateQuestion();
-            dropAnswers(questionData);
+            if (currentQuestion) {
+                dropAnswers(currentQuestion); // Resume the current question
+                currentQuestion = null; // Clear after resuming
+            } else {
+                const questionData = generateQuestion();
+                dropAnswers(questionData);
+            }
         }
 
         function restartGame() {
             score = 0;
+            totalQuestions = 0;
             scoreEl.textContent = "٠";
+            totalEl.textContent = "٠";
             resultEl.style.display = "none";
             isPaused = false;
+            isGameEnded = false;
             hasAnswered = false;
+            currentQuestion = null;
+            fallIntervals.forEach(clearInterval);
+            fallIntervals = [];
             startGame();
         }
 
         function pauseGame() {
+            if (isGameEnded) return;
+
             isPaused = !isPaused;
-            pauseBtn.textContent = isPaused ? "استئناف" : "إيقاف";
-            restartBtn.disabled = isPaused;
-            endBtn.disabled = isPaused;
+            pauseBtn.textContent = isPaused ? "استئناف" : "إيقاف مؤقت";
+
+            if (!isPaused) {
+                resumeAnimations();
+            }
         }
 
         function endGame() {
             isPaused = true;
+            isGameEnded = true;
+            currentQuestion = null;
+            fallIntervals.forEach(clearInterval);
             resultEl.style.display = "block";
-            resultEl.textContent = `لعبتك انتهت! درجتك: ${score}`.replace(/\d/g, (digit) => "٠١٢٣٤٥٦٧٨٩"[digit]);
+            resultEl.textContent = `لعبتك انتهت! درجتك: ${score} / ${totalQuestions}`.replace(/\d/g, (digit) => "٠١٢٣٤٥٦٧٨٩"[digit]);
         }
 
         restartGame();
