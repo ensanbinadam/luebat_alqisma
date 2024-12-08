@@ -266,7 +266,7 @@
 
         function animateCircle(circle) {
             let top = parseInt(circle.style.top.replace("px", "")) || -50;
-            const fallSpeed = 2;
+            const fallSpeed = 1.5;
 
             const fallInterval = setInterval(() => {
                 if (isPaused || isGameEnded) {
