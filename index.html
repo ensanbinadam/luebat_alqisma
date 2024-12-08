@@ -189,6 +189,7 @@
         let hasAnswered = false;
         let isGameEnded = false;
         let currentQuestion = null;
+        let lastQuestion = null;
         let fallIntervals = [];
 
         function randomInt(min, max) {
@@ -196,9 +197,15 @@
         }
 
         function generateQuestion() {
-            const divisor = randomInt(1, 10);
-            const quotient = randomInt(1, 10);
-            const dividend = divisor * quotient;
+            let divisor, quotient, dividend;
+
+            do {
+                divisor = randomInt(1, 10);
+                quotient = randomInt(1, 10);
+                dividend = divisor * quotient;
+            } while (lastQuestion && lastQuestion.divisor === divisor && lastQuestion.quotient === quotient);
+
+            lastQuestion = { divisor, quotient };
 
             questionBox.textContent = `${dividend} ÷ ${divisor} = ؟`.replace(/\d/g, (digit) => "٠١٢٣٤٥٦٧٨٩"[digit]);
 
@@ -207,7 +214,9 @@
 
             while (answers.size < 3) {
                 const wrongAnswer = randomInt(1, 10);
-                if (!answers.has(wrongAnswer)) answers.add(wrongAnswer);
+                if (!answers.has(wrongAnswer) && wrongAnswer !== quotient) {
+                    answers.add(wrongAnswer);
+                }
             }
 
             return {
@@ -266,7 +275,7 @@
 
         function animateCircle(circle) {
             let top = parseInt(circle.style.top.replace("px", "")) || -50;
-            const fallSpeed = 1.5;
+            const fallSpeed = 1;
 
             const fallInterval = setInterval(() => {
                 if (isPaused || isGameEnded) {
@@ -297,13 +306,8 @@
         function startGame() {
             if (isPaused || isGameEnded) return;
 
-            if (currentQuestion) {
-                dropAnswers(currentQuestion); // Resume the current question
-                currentQuestion = null; // Clear after resuming
-            } else {
-                const questionData = generateQuestion();
-                dropAnswers(questionData);
-            }
+            const questionData = generateQuestion();
+            dropAnswers(questionData);
         }
 
         function restartGame() {
@@ -315,7 +319,7 @@
             isPaused = false;
             isGameEnded = false;
             hasAnswered = false;
-            currentQuestion = null;
+            lastQuestion = null;
             fallIntervals.forEach(clearInterval);
             fallIntervals = [];
             startGame();
