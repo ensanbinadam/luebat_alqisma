@@ -34,24 +34,24 @@
         }
 
         .header div {
-            font-size: 18px;
+            font-size: 1.2rem;
             font-weight: bold;
         }
 
         #game-title {
-            font-size: 28px;
+            font-size: 2rem;
             font-weight: bold;
             margin-bottom: 10px;
         }
 
         #game-subtitle {
-            font-size: 18px;
+            font-size: 1.2rem;
             color: #555;
             margin-bottom: 20px;
         }
 
         #question-box {
-            font-size: 24px;
+            font-size: 1.5rem;
             background-color: #fffbcc;
             padding: 15px;
             border-radius: 10px;
@@ -69,13 +69,13 @@
 
         .circle {
             position: absolute;
-            width: 50px;
-            height: 50px;
+            width: 15%;
+            height: 15%;
             background-color: #f0f0f0;
             border-radius: 50%;
             text-align: center;
-            line-height: 50px;
-            font-size: 18px;
+            line-height: calc(15%);
+            font-size: 1rem;
             cursor: pointer;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
         }
@@ -96,7 +96,7 @@
 
         button {
             padding: 10px 20px;
-            font-size: 16px;
+            font-size: 1rem;
             border: none;
             border-radius: 5px;
             cursor: pointer;
@@ -110,13 +110,13 @@
 
         #result {
             display: none;
-            font-size: 20px;
+            font-size: 1.5rem;
             margin-top: 20px;
         }
 
         .footer {
             margin-top: 30px;
-            font-size: 14px;
+            font-size: 0.9rem;
             color: #888;
         }
 
@@ -129,21 +129,82 @@
         }
 
         .settings-container label {
-            font-size: 16px;
+            font-size: 1rem;
             margin-right: 10px;
         }
 
         .settings-container input {
             padding: 5px;
-            font-size: 16px;
+            font-size: 1rem;
             border: 1px solid #ccc;
             border-radius: 5px;
-            max-width: 50px;
+            max-width: 60px;
             text-align: center;
         }
 
         .settings-container button {
             margin-left: 15px;
+        }
+
+        /* Media Queries */
+        @media (max-width: 768px) {
+            .circle {
+                width: 20%;
+                height: 20%;
+                font-size: 0.9rem;
+            }
+
+            #question-box {
+                font-size: 1.2rem;
+            }
+
+            button {
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+
+            .settings-container label {
+                font-size: 0.9rem;
+            }
+
+            .settings-container input {
+                font-size: 0.9rem;
+                max-width: 50px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .circle {
+                width: 25%;
+                height: 25%;
+                font-size: 0.8rem;
+            }
+
+            #game-title {
+                font-size: 1.5rem;
+            }
+
+            #game-subtitle {
+                font-size: 1rem;
+            }
+
+            #question-box {
+                font-size: 1rem;
+            }
+
+            button {
+                padding: 5px 10px;
+                font-size: 0.8rem;
+            }
+
+            .settings-container label {
+                font-size: 0.8rem;
+            }
+
+            .settings-container input {
+                font-size: 0.8rem;
+                max-width: 40px;
+            }
         }
     </style>
 </head>
@@ -174,7 +235,7 @@
     </div>
 
     <div class="footer">
-        تصميم فنون الرياضيات بإشراف المعلمة/سعاد الغامدي مع الذكاء الاصطناعي
+        تصميم عبدالعزيز العبدالجبار مع الذكاء الاصطناعي
     </div>
 
     <script>
@@ -202,7 +263,6 @@
             const answers = new Set();
             answers.add(quotient);
 
-            // توليد الإجابات الخاطئة من نفس جدول العددين
             while (answers.size < 3) {
                 const wrongAnswer = randomInt(1, 10);
                 if (!answers.has(wrongAnswer)) answers.add(wrongAnswer);
